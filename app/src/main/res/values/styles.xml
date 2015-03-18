@@ -1,0 +1,17 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="AppTheme.Base">
+
+    </style>
+
+    <style name="AppTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/primaryColor_500</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor_700</item>
+        <item name="colorAccent">@color/accentColor</item>
+    </style>
+
+    <style name="toolbarTheme" parent="ThemeOverlay.AppCompat.Dark">
+
+    </style>
+
+</resources>
