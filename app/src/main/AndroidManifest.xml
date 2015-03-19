@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Module1Activity"
+            android:name=".modules.Module1Activity"
             android:label="@string/title_activity_module1"
             android:parentActivityName=".MainActivity" >
             <meta-data
