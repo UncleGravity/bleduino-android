@@ -82,7 +82,7 @@ public class ModuleGridAdapter extends RecyclerView.Adapter<ModuleGridAdapter.Vi
 
             itemView.setOnClickListener(this);
             imgViewIcon.setOnClickListener(this);
-            itemLayoutView.setOnClickListener(this);
+            //itemLayoutView.setOnClickListener(this);
         }
 
         @Override
