@@ -11,17 +11,17 @@
     <string name="hello_blank_fragment">Hello blank fragment!</string>
     <string name="drawer_open">Drawer Open</string>
     <string name="drawer_close">Drawer Close</string>
-    
-    <string-array name="drawer_list">
-        <item>Item 1</item>
-        <item>Item 2</item>
-        <item>Item 3</item>
-        <item>Item 4</item>
-        <item>Item 5</item>
-        <item>Item 6</item>
-        <item>Item 7</item>
-        <item>Item 8</item>
-        <item>Item 9</item>
+
+    <string-array name="cat_names">
+        <item>George</item>
+        <item>Zubin</item>
+        <item>Carlos</item>
+        <item>Frank</item>
+        <item>Charles</item>
+        <item>Simon</item>
+        <item>Fezra</item>
+        <item>Henry</item>
+        <item>Schuster</item>
     </string-array>
 
 

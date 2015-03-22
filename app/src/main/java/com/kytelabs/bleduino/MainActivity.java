@@ -1,6 +1,5 @@
 package com.kytelabs.bleduino;
 
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -21,7 +20,6 @@ import com.kytelabs.bleduino.adapters.DrawerListAdapter;
 import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
 import com.kytelabs.bleduino.fragments.ModulesFragment;
 import com.kytelabs.bleduino.fragments.SettingsFragment;
-import com.kytelabs.bleduino.modules.Module1Activity;
 import com.kytelabs.bleduino.pojos.NavigationItem;
 
 import java.util.Arrays;
@@ -35,10 +33,13 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
     //Member Variables
     //--------------------------------------------------------------------------------
-    @InjectView(R.id.app_bar) Toolbar mToolbar;
-    @InjectView(R.id.drawerLayout) DrawerLayout mDrawerLayout;
+    @InjectView(R.id.app_bar)
+    Toolbar mToolbar;
+    @InjectView(R.id.drawerLayout)
+    DrawerLayout mDrawerLayout;
     ActionBarDrawerToggle mDrawerToggle;
-    @InjectView(R.id.listViewDrawer) ListView mListView;
+    @InjectView(R.id.listViewDrawer)
+    ListView mListView;
     private NavigationItem[] mNavigationItems;
 
     //================================================================================
@@ -83,7 +84,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        if (!mNavigationItems[position].isHeader()){
+        if (!mNavigationItems[position].isHeader()) {
             Class<? extends Fragment> fragmentClass = mNavigationItems[position].getFragmentClass();
 
             setFragment(position, fragmentClass);
@@ -146,7 +147,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     //================================================================================
 
     private void drawerSetUp() {
-        mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout,mToolbar, R.string.drawer_open,R.string.drawer_close){
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
 
             @Override
             public void onDrawerOpened(View drawerView) {
@@ -216,9 +217,6 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }
-        if(id == R.id.navigate){
-            startActivity(new Intent(this, Module1Activity.class));
         }
 
         return super.onOptionsItemSelected(item);
