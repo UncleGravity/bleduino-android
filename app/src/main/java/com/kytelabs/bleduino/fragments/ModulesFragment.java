@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.ModuleGridAdapter;
+import com.kytelabs.bleduino.modules.ConsoleModuleActivity;
+import com.kytelabs.bleduino.modules.KeyboardModule;
 import com.kytelabs.bleduino.modules.Module1Activity;
 import com.kytelabs.bleduino.pojos.ModuleListItem;
 
@@ -66,14 +68,14 @@ public class ModulesFragment extends Fragment {
         mModules = new ModuleListItem[4];
 
         mModules[0] = new ModuleListItem();
-        mModules[0].setText("LCD");
+        mModules[0].setText("Keyboard");
         mModules[0].setIconId(0);
-        mModules[0].setNextClass(Module1Activity.class);
+        mModules[0].setNextClass(KeyboardModule.class);
 
         mModules[1] = new ModuleListItem();
         mModules[1].setText("Console");
         mModules[1].setIconId(0);
-        mModules[1].setNextClass(Module1Activity.class);
+        mModules[1].setNextClass(ConsoleModuleActivity.class);
 
         mModules[2] = new ModuleListItem();
         mModules[2].setText("LED");

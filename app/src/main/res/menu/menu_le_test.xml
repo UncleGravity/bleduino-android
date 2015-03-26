@@ -1,12 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
-      tools:context=".MainActivity"  >
+      tools:context="com.kytelabs.bleduino.LeTestActivity">
 
-    <item android:id="@+id/action_next"
-          android:title="BLE Test"
+    <item android:id="@+id/action_scan"
+          android:title="Scan"
           android:orderInCategory="100"
-          app:showAsAction="always"/>
-
-
+          app:showAsAction="always" />
 </menu>

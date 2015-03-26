@@ -1,0 +1,45 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="com.kytelabs.bleduino.modules.ConsoleModuleActivity">
+
+    <include
+        android:id="@+id/app_bar"
+        layout="@layout/app_bar" />
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/consoleScrollView"
+        android:layout_below="@+id/app_bar"
+        android:layout_above="@+id/consoleEditText">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nibh sapien, semper nec odio quis, tempus lobortis ante. Nulla elit tortor, vulputate in lacus in, ornare commodo mi. Curabitur a arcu eget lectus egestas rutrum sed non nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis fermentum tincidunt tellus non tincidunt. In nunc eros, malesuada vel lacus ac, consequat imperdiet lorem. Vestibulum auctor iaculis nibh, dignissim ornare dui vehicula at. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam eu ex felis. Sed a ex turpis. Vivamus vitae orci leo. Vestibulum sit amet consectetur velit. Donec tincidunt nibh et faucibus mattis. Nullam facilisis laoreet porttitor. Interdum et malesuada fames ac ante ipsum primis in faucibus. Integer odio nibh, efficitur in augue eu, congue varius nisi.
+
+In eget diam vitae lacus mollis imperdiet. Curabitur sit amet leo sit amet diam eleifend posuere. Cras quis convallis massa. Nunc et risus erat. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis faucibus tellus, sit amet placerat nisl. Vestibulum quis vulputate ipsum. Nunc id mattis felis, non facilisis enim. Morbi sit amet imperdiet ligula. Nunc eu turpis tortor.
+
+Proin auctor, erat eu porta faucibus, dui ex posuere orci, non efficitur lectus magna sodales metus. Ut euismod metus ut dictum finibus. Proin rutrum neque nec erat fermentum ornare. In sollicitudin porta purus. Praesent molestie id nulla quis sodales. Aliquam erat volutpat. Nunc imperdiet ac ante ac rhoncus. Fusce mattis neque nec sem condimentum, a rhoncus quam tristique. Nullam et augue a nulla convallis dignissim a luctus quam. Donec nec velit vel leo sagittis elementum et nec nulla. Nulla viverra, tortor a luctus luctus, est arcu bibendum odio, eget volutpat velit nulla sed elit. Etiam tempor enim et auctor imperdiet. Sed venenatis ipsum neque, at tincidunt libero aliquet sit amet.
+
+Donec pharetra quam nec faucibus condimentum. Proin nunc ipsum, imperdiet et erat sit amet, vulputate varius neque. Sed id ullamcorper tellus, eu dapibus diam. Vestibulum a justo id nunc blandit aliquam. Integer eget tellus nec eros tincidunt suscipit at a sem. Nam quis lobortis augue. Integer imperdiet vulputate commodo. Sed interdum ornare mattis. Curabitur ac orci pellentesque, aliquet sapien at, suscipit ligula.
+
+Aenean aliquet lacinia erat, vel viverra ex fermentum ut. Proin auctor non lectus laoreet facilisis. Donec et nisi eget sem dictum porttitor eget id nisl. Nam et consectetur mauris, eget efficitur nisi. Vivamus mollis auctor velit vitae vulputate. Phasellus feugiat diam neque, eget sodales ipsum cursus vitae. Integer vel rutrum nunc."
+            android:id="@+id/textView"/>
+
+    </ScrollView>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:ems="10"
+        android:id="@+id/consoleEditText"
+        android:layout_alignParentStart="true"
+        android:textAlignment="textStart"
+        android:hint="Type here..."
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>

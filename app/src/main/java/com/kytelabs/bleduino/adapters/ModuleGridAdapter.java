@@ -11,7 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kytelabs.bleduino.R;
-import com.kytelabs.bleduino.modules.Module1Activity;
 import com.kytelabs.bleduino.pojos.ModuleListItem;
 
 import java.util.List;
@@ -41,7 +40,7 @@ public class ModuleGridAdapter extends RecyclerView.Adapter<ModuleGridAdapter.Vi
             @Override
             public void moduleClick(View caller, int index) {
 
-                Intent intent = new Intent(mContext, Module1Activity.class);
+                Intent intent = new Intent(mContext, mModules.get(index).getNextClass());
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent);
                 Log.d("Test", "Index = " + index); // TODO Remove this log
@@ -80,8 +79,9 @@ public class ModuleGridAdapter extends RecyclerView.Adapter<ModuleGridAdapter.Vi
             mListener = listener;
             ButterKnife.inject(this, itemLayoutView);
 
-            itemView.setOnClickListener(this);
+            //itemView.setOnClickListener(this);
             imgViewIcon.setOnClickListener(this);
+            moduleName.setOnClickListener(this);
             //itemLayoutView.setOnClickListener(this);
         }
 

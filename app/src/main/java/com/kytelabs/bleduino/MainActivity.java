@@ -1,5 +1,6 @@
 package com.kytelabs.bleduino;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -31,15 +32,17 @@ import butterknife.InjectView;
 
 public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
 
+    //Constants
+    public static final int MODULES = 1;
+    public static final int CONNECTION_MANAGER = 2;
+    public static final int SETTINGS = 3;
+
     //Member Variables
     //--------------------------------------------------------------------------------
-    @InjectView(R.id.app_bar)
-    Toolbar mToolbar;
-    @InjectView(R.id.drawerLayout)
-    DrawerLayout mDrawerLayout;
+    @InjectView(R.id.app_bar) Toolbar mToolbar;
+    @InjectView(R.id.drawerLayout) DrawerLayout mDrawerLayout;
     ActionBarDrawerToggle mDrawerToggle;
-    @InjectView(R.id.listViewDrawer)
-    ListView mListView;
+    @InjectView(R.id.listViewDrawer) ListView mListView;
     private NavigationItem[] mNavigationItems;
 
     //================================================================================
@@ -61,8 +64,15 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
         // List View Setup
         //----------------------------------------------------------------------------
+        populateNavigation(MODULES);
+        listViewSetUp();
 
-        populateNavigation();
+        setFragment(0, ModulesFragment.class);
+        //mDrawerRecyclerView.getAdapter();
+
+    }
+
+    private void listViewSetUp() {
 
         List<NavigationItem> navigationList = Arrays.asList(mNavigationItems);
         // Set adapter
@@ -70,11 +80,6 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         mListView.setAdapter(adapter);
 
         mListView.setOnItemClickListener(this);
-
-        setFragment(0, ModulesFragment.class);
-
-        //mDrawerRecyclerView.getAdapter();
-
     }
 
     //================================================================================
@@ -84,15 +89,23 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        if (!mNavigationItems[position].isHeader()) {
-            Class<? extends Fragment> fragmentClass = mNavigationItems[position].getFragmentClass();
+        if (!mNavigationItems[position].isHeader() && !mNavigationItems[position].isDivider() && !mNavigationItems[position].isSelected()) {
 
+            populateNavigation(position);
+            listViewSetUp();
+
+            Class<? extends Fragment> fragmentClass = mNavigationItems[position].getFragmentClass();
             setFragment(position, fragmentClass);
         }
+
+        if(mNavigationItems[position].isSelected()){
+            mDrawerLayout.closeDrawers();
+        }
+
     }
 
 
-    private void populateNavigation() {
+    private void populateNavigation(int selected) {
         mNavigationItems = new NavigationItem[6];
 
         mNavigationItems[0] = new NavigationItem();
@@ -102,18 +115,17 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         mNavigationItems[1] = new NavigationItem();
         mNavigationItems[1].setFragmentClass(ModulesFragment.class);
         mNavigationItems[1].setText("Modules");
-        mNavigationItems[1].setIconId(R.drawable.ic_directions_car_black_36dp);
-        mNavigationItems[1].setSelected(true);
+        mNavigationItems[1].setIconId(R.drawable.ic_console_black_24dp);
 
         mNavigationItems[2] = new NavigationItem();
         mNavigationItems[2].setFragmentClass(ConnectionManagerFragment.class);
         mNavigationItems[2].setText("Connection Manager");
-        mNavigationItems[2].setIconId(R.drawable.ic_directions_subway_black_36dp);
+        mNavigationItems[2].setIconId(R.drawable.ic_bluetooth_searching_black_24dp);
 
         mNavigationItems[3] = new NavigationItem();
         mNavigationItems[3].setFragmentClass(SettingsFragment.class);
         mNavigationItems[3].setText("Settings");
-        mNavigationItems[3].setIconId(R.drawable.ic_directions_bike_black_36dp);
+        mNavigationItems[3].setIconId(R.drawable.ic_settings_black_24dp);
 
         mNavigationItems[4] = new NavigationItem();
         mNavigationItems[4].setDivider(true);
@@ -121,6 +133,9 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         mNavigationItems[5] = new NavigationItem();
         mNavigationItems[5].setText("Other Stuff");
         mNavigationItems[5].setHeader(true);
+
+        // Set selected from parameter
+        mNavigationItems[selected].setSelected(true);
 
     }
 
@@ -217,6 +232,11 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }
+
+        if(id == R.id.action_next){
+            Intent intent = new Intent(this, LeTestActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);

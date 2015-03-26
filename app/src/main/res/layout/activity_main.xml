@@ -38,7 +38,8 @@
             android:choiceMode="singleChoice"
             android:background="#fff"
             android:divider="@null"
-            android:dividerHeight="0dp" />
+            android:dividerHeight="0dp"
+            android:paddingTop="3dp"/>
 
     </android.support.v4.widget.DrawerLayout>
 </LinearLayout>

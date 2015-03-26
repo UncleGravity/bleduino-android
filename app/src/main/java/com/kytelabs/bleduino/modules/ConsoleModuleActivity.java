@@ -1,27 +1,32 @@
 package com.kytelabs.bleduino.modules;
 
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import com.kytelabs.bleduino.R;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
-/* This is a fake module activity just to have something to link to in the modules grid*/
-
-public class Module1Activity extends ActionBarActivity {
+public class ConsoleModuleActivity extends ActionBarActivity {
 
     @InjectView(R.id.app_bar) Toolbar mToolbar;
+    @InjectView(R.id.consoleEditText) EditText mEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_module1);
+        setContentView(R.layout.activity_console_module);
         ButterKnife.inject(this);
+
+        // Hide editText bottom bar (optional)
+        //mEditText.setBackground(null);
 
         setSupportActionBar(mToolbar);
 
@@ -29,11 +34,25 @@ public class Module1Activity extends ActionBarActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                .toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_NOT_ALWAYS);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_module1, menu);
+        getMenuInflater().inflate(R.menu.menu_console_module, menu);
         return true;
     }
 

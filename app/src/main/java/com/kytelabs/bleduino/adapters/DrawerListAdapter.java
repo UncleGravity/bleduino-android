@@ -2,6 +2,7 @@ package com.kytelabs.bleduino.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,15 +63,21 @@ public class DrawerListAdapter extends BaseAdapter {
 
                 convertView = mInflater.inflate(R.layout.list_item_navigation, null);
 
-                ImageView imgIcon = (ImageView) convertView.findViewById(R.id.drawerItemIcon);
-                TextView tvTitle = (TextView) convertView.findViewById(R.id.drawerItemText);
+                ImageView icon = (ImageView) convertView.findViewById(R.id.drawerItemIcon);
+                TextView title = (TextView) convertView.findViewById(R.id.drawerItemText);
 
                 NavigationItem item = mItems.get(position);
+                icon.setImageResource(item.getIconId());
+                title.setText(item.getText());
 
-                imgIcon.setImageResource(item.getIconId());
-                final int newColor = mContext.getResources().getColor(R.color.primaryColor_500);
-                imgIcon.setColorFilter(newColor, PorterDuff.Mode.SRC_ATOP);
-                tvTitle.setText(item.getText());
+                if (mItems.get(position).isSelected()) {
+                    final int newColor = mContext.getResources().getColor(R.color.accentColor);
+                    icon.setColorFilter(newColor, PorterDuff.Mode.SRC_ATOP);
+                    title.setTextColor(newColor);
+                } else {
+                    icon.setColorFilter(Color.parseColor("#de000000"), PorterDuff.Mode.SRC_ATOP);
+
+                }
             }
         }
 

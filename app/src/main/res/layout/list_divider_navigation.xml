@@ -12,9 +12,9 @@
 
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#DDD"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:background="#1e000000">
     </LinearLayout>
 </LinearLayout>
