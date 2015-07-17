@@ -18,41 +18,36 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.kytelabs.bleduino.R;
-import com.kytelabs.bleduino.adapters.ConsoleListAdapter;
+import com.kytelabs.bleduino.adapters.LedListAdapter;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
 import com.kytelabs.bleduino.ble.BLEService;
 import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
-import com.kytelabs.bleduino.pojos.ConsoleListItem;
+import com.kytelabs.bleduino.pojos.LedListItem;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
-public class ConsoleModuleActivity extends ActionBarActivity {
+public class LedModuleActivity extends ActionBarActivity implements LedListAdapter.OnLedClickListener {
 
-    private final static String TAG = ConsoleModuleActivity.class.getSimpleName();
+    private final static String TAG = LedModuleActivity.class.getSimpleName();
 
     //Member Variables
     //--------------------------------------------------------------------------------
-    private ArrayList<ConsoleListItem> mMessages; //empty at first, filled dynamically by user
-    @InjectView(R.id.consoleRecyclerView) RecyclerView mRecyclerView;
+    private LedListItem[] mLedListItems;
+    @InjectView(R.id.ledRecyclerView) RecyclerView mRecyclerView;
     @InjectView(R.id.app_bar) Toolbar mToolbar;
-    @InjectView(R.id.consoleEditText) EditText mEditText;
 
     // BLE variables
     //----------------------------------------------------------------------------
 
-    BluetoothGattCharacteristic mUartWriteCharacteristic;
-    BluetoothGattCharacteristic mUartReadCharacteristic;
+    BluetoothGattCharacteristic mFirmataCharacteristic;
     BLEService mBluetoothLeService;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -79,12 +74,11 @@ public class ConsoleModuleActivity extends ActionBarActivity {
                 //Look for uart service
                 for (BluetoothGattService leService : mBluetoothGattServices) {
                     //Found service, get write characteristic, put value, then write it.
-                    if(leService.getUuid().equals(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_SERVICE))){
-                        mUartReadCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_READ_CHARACTERISTIC));
-                        mUartWriteCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_WRITE_CHARACTERISTIC));
+                    if(leService.getUuid().equals(UUID.fromString(BLEGattAttributes.BLEDUINO_FIRMATA_SERVICE))){
+                        mFirmataCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_FIRMATA_CHARACTERISTIC));
 
                         // Subscribe
-                        mBluetoothLeService.setCharacteristicNotification(mUartReadCharacteristic, true);
+                        //mBluetoothLeService.setCharacteristicNotification(mFirmataCharacteristic, true);
                     }}}
 
         }
@@ -102,11 +96,8 @@ public class ConsoleModuleActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_console_module);
+        setContentView(R.layout.activity_led_module);
         ButterKnife.inject(this);
-
-        // Hide editText bottom bar (optional)
-        //mEditText.setBackground(null);
 
         //Toolbar Setup
         //--------------------------------------------------------------------------------
@@ -115,11 +106,9 @@ public class ConsoleModuleActivity extends ActionBarActivity {
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        //Recycler Setup
+        //RecyclerView Setup
         //--------------------------------------------------------------------------------
-        mMessages = new ArrayList<>();
-        //populateModules(); //TODO only for debugging. Remove this.
-
+        populateLedList();
         setupAdapter();
 
         // BLEService Setup (bind service to activity)
@@ -131,13 +120,7 @@ public class ConsoleModuleActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Register MainActivity to receive broadcasts from the BLEService
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-
-        //Show keyboard
-        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
-                .toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     @Override
@@ -146,10 +129,6 @@ public class ConsoleModuleActivity extends ActionBarActivity {
 
         // Unregister BLE service
         unregisterReceiver(mGattUpdateReceiver);
-
-        // Hide keyboard
-        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
-                .hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
     }
 
     @Override
@@ -160,49 +139,13 @@ public class ConsoleModuleActivity extends ActionBarActivity {
     }
 
     //================================================================================
-    // Recycler View
-    //================================================================================
-
-    private void setupAdapter() {
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(layoutManager);
-
-        ConsoleListAdapter adapter = new ConsoleListAdapter(this, mMessages);
-        mRecyclerView.setAdapter(adapter);
-
-        mRecyclerView.scrollToPosition(mMessages.size() - 1);
-    }
-
-    private void updateList(String origin, String message) {
-
-        ConsoleListItem newMessage = new ConsoleListItem();
-        newMessage.setMessageSourceName(origin);
-        newMessage.setMessage(message);
-
-        mMessages.add(newMessage);
-        setupAdapter();
-    }
-
-//    private void populateModules() {
-//        mMessages = new ArrayList<>();
-//
-//        mMessages.add(new ConsoleListItem());
-//        mMessages[0].setMessageSourceName("iOS");
-//        mMessages[0].setMessage("Message 1!lkjasdflijef iljeflijeflij lskj sdfl sdlfkj sdfl sdfl sdfl sfl sdfl sdfl sdfl sdfl sdfl sdlf sdfl sdfl sdlf sdlf sdf.");
-//
-//        mMessages[1] = new ConsoleListItem();
-//        mMessages[1].setMessageSourceName("BLEduino");
-//        mMessages[1].setMessage("Message 2!");
-//    }
-
-    //================================================================================
     // Action Bar
     //================================================================================
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_console_module, menu);
+        getMenuInflater().inflate(R.menu.menu_led_module, menu);
         return true;
     }
 
@@ -218,36 +161,67 @@ public class ConsoleModuleActivity extends ActionBarActivity {
             return true;
         }
 
-        else if(id == R.id.action_console_send){
-
-            if(sendLeString(mEditText.getText().toString())){
-                updateList("Android", mEditText.getText().toString());
-                mEditText.setText("");
-            }
-
-            //Log.i(TAG, "Enter pressed with text: " + mEditText.getText());
-        }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    //================================================================================
+    // Recycler View
+    //================================================================================
+
+    private void populateLedList() {
+        mLedListItems = new LedListItem[21];
+
+        mLedListItems[0] = new LedListItem("0");
+        mLedListItems[1] = new LedListItem("1");
+        mLedListItems[2] = new LedListItem("2");
+
+        mLedListItems[3] = new LedListItem("3");
+        mLedListItems[4] = new LedListItem("4");
+        mLedListItems[5] = new LedListItem("5");
+
+        mLedListItems[6] = new LedListItem("6");
+        mLedListItems[7] = new LedListItem("7");
+        mLedListItems[8] = new LedListItem("8");
+
+        mLedListItems[9] = new LedListItem("9");
+        mLedListItems[10] = new LedListItem("10");
+        mLedListItems[11] = new LedListItem("13");
+
+        mLedListItems[12] = new LedListItem("A0");
+        mLedListItems[13] = new LedListItem("A1");
+        mLedListItems[14] = new LedListItem("A2");
+
+        mLedListItems[15] = new LedListItem("A3");
+        mLedListItems[16] = new LedListItem("A4");
+        mLedListItems[17] = new LedListItem("A5");
+
+        mLedListItems[18] = new LedListItem("MOSI");
+        mLedListItems[19] = new LedListItem("MISO");
+        mLedListItems[20] = new LedListItem("SCK");
+
+    }
+
+    private void setupAdapter() {
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        LedListAdapter adapter = new LedListAdapter(this, Arrays.asList(mLedListItems)); //TODO LedListAdapter
+        mRecyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onLedClick(LedListItem led) {
+        // do stuff
+        sendLedCommand(led.getPinNumber(), led.isPinState());
     }
 
     //================================================================================
     // Bluetooth Low Energy Code
     //================================================================================
 
-    private boolean sendLeString(String text) {
+    private boolean sendLedCommand(int pinNumber, boolean pinState) {
 
         // TODO handle when there is no device connected.  mBluetoothGatt == null
-        // TODO handle sending data bigger than 20 bytes.
-
-        if(text.equals("")){
-            return false;
-        }
-
-        if(text.length() > 20){
-            Toast.makeText(getApplicationContext(), "Data must be less than 20 characters.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
 
         if(mBluetoothLeService.getBluetoothGatt() == null){
             Toast.makeText(getApplicationContext(), "No BLEduino connected", Toast.LENGTH_SHORT).show();
@@ -259,9 +233,16 @@ public class ConsoleModuleActivity extends ActionBarActivity {
             return false;
         }
 
-        // Write text to uart characteristic
-        mUartWriteCharacteristic.setValue(text.getBytes());
-        mBluetoothLeService.writeCharacteristic(mUartWriteCharacteristic);
+        // Toggle LED pin
+        byte[] ledCommand = new byte[3];
+        ledCommand[0] = (byte) pinNumber;
+        ledCommand[1] = 0;
+        ledCommand[2] = (byte) (pinState ? 1 : 0);
+
+        mFirmataCharacteristic.setValue(ledCommand);
+        mBluetoothLeService.writeCharacteristic(mFirmataCharacteristic);
+
+        Log.d(TAG, "command = [" + ledCommand[0] + ", " + ledCommand[1] + ", " + ledCommand[2] + "]");
 
         return true;
     }
@@ -297,14 +278,6 @@ public class ConsoleModuleActivity extends ActionBarActivity {
 
             else if (BLEService.ACTION_DATA_AVAILABLE.equals(action)){
                 Log.d(TAG, "Data Received!");
-                //Log.d(TAG, (intent.getByteArrayExtra("EXTRA_DATA")[0] + ""));
-
-                try {
-                    updateList("BLEduino", new String(intent.getByteArrayExtra("EXTRA_DATA"), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
             }
 
             else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
@@ -312,6 +285,11 @@ public class ConsoleModuleActivity extends ActionBarActivity {
                 // Show all the supported services and characteristics on the user interface.
                 Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
 
+            }
+
+            else if (BLEService.ACTION_GATT_RSSI.equals(action)) {
+                //
+                //Toast.makeText(getApplicationContext(), "ACTION_GATT_RSSI", Toast.LENGTH_SHORT).show();
             }
 
         }

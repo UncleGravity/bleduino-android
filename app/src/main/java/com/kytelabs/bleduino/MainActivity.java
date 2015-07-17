@@ -1,11 +1,26 @@
 package com.kytelabs.bleduino;
 
+import android.app.NotificationManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,25 +30,39 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.kytelabs.bleduino.adapters.DrawerListAdapter;
+import com.kytelabs.bleduino.ble.BLEGattAttributes;
+import com.kytelabs.bleduino.ble.BLEService;
 import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
 import com.kytelabs.bleduino.fragments.ModulesFragment;
 import com.kytelabs.bleduino.fragments.SettingsFragment;
 import com.kytelabs.bleduino.pojos.NavigationItem;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 
-public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
+public class MainActivity
+        extends ActionBarActivity
+        implements
+        AdapterView.OnItemClickListener,
+        ConnectionManagerFragment.ConnectionManagerListener,
+        ModulesFragment.ModulesFragmentListener,
+        SettingsFragment.SettingsFragmentListener {
+
+    private final static String TAG = MainActivity.class.getSimpleName();
 
     //Constants
-    public static final int MODULES = 1;
+    public static final int CONSOLE = 1;
     public static final int CONNECTION_MANAGER = 2;
     public static final int SETTINGS = 3;
 
@@ -45,13 +74,39 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     @InjectView(R.id.listViewDrawer) ListView mListView;
     private NavigationItem[] mNavigationItems;
 
+    //BLE Member Variables
+    //--------------------------------------------------------------------------------
+    BLEService mBluetoothLeService;
+    BluetoothGattCharacteristic mFirmataCharacteristic;
+
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mBluetoothLeService = ((BLEService.LocalBinder) service).getService();
+
+            if (!mBluetoothLeService.initialize()) {
+                //Bluetooth is disabled
+                Log.e(TAG, "Unable to initialize BLE");
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivity(enableBtIntent);
+            }
+            Log.e(TAG, "OnServiceConnected called");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBluetoothLeService = null;
+        }
+    };
+
     //================================================================================
-    // On Create
+    // Activity Life Cycle Methods
     //================================================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
 
         ButterKnife.inject(this); //neverforget.jpg
@@ -64,12 +119,51 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
         // List View Setup
         //----------------------------------------------------------------------------
-        populateNavigation(MODULES);
+        populateNavigation(CONSOLE);
         listViewSetUp();
 
         setFragment(0, ModulesFragment.class);
         //mDrawerRecyclerView.getAdapter();
 
+        // BLEService Setup (bind service to activity)
+        //----------------------------------------------------------------------------
+        Intent gattServiceIntent = new Intent(this, BLEService.class);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        // Register MainActivity to receive broadcasts from the BLEService
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+
+    }
+
+    //
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        /*
+         * Check for Bluetooth LE Support.  In production, our manifest entry will keep this
+         * from installing on these devices, but this will allow test devices or other
+         * sideloads to report whether or not the feature exists.
+         */
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //unregisterReceiver(mGattUpdateReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mServiceConnection);
+        mBluetoothLeService = null;
     }
 
     private void listViewSetUp() {
@@ -98,7 +192,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
             setFragment(position, fragmentClass);
         }
 
-        if(mNavigationItems[position].isSelected()){
+        if (mNavigationItems[position].isSelected()) {
             mDrawerLayout.closeDrawers();
         }
 
@@ -144,8 +238,8 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
             Fragment fragment = fragmentClass.newInstance();
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.frameContainer, fragment, fragmentClass.getSimpleName());
-            fragmentTransaction.commit();
+            fragmentTransaction.replace(R.id.frameContainer, fragment, fragmentClass.getSimpleName())
+                    .commit();
 
             //mListView.setItemChecked(position, true);
             mDrawerLayout.closeDrawers();
@@ -165,16 +259,34 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
 
             @Override
+            public void onDrawerStateChanged(int newState) {
+                super.onDrawerStateChanged(newState);
+                if (newState == DrawerLayout.STATE_DRAGGING && mNavigationItems[CONSOLE].isSelected()) {
+                    //ConsoleFragment consoleFragment = (ConsoleFragment) getSupportFragmentManager().findFragmentById(R.id.frameContainer);
+                    //consoleFragment.onKeyboardShouldClose();
+                }
+
+
+            }
+
+            @Override
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                // code here will execute once the drawer is opened (Since I don't want anything
-                // happening when drawer is open, I am not going to put anything here)
+                // code here will execute once the drawer is opened
+                if (mNavigationItems[CONSOLE].isSelected()) {
+                    //ConsoleFragment consoleFragment = (ConsoleFragment) getSupportFragmentManager().findFragmentById(R.id.frameContainer);
+                    //consoleFragment.onKeyboardShouldClose();
+                }
             }
 
             @Override
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
                 // Code here will execute once drawer is closed
+                if (mNavigationItems[CONSOLE].isSelected()) {
+                    //ConsoleFragment consoleFragment = (ConsoleFragment) getSupportFragmentManager().findFragmentById(R.id.frameContainer);
+                    //consoleFragment.onKeyboardShouldOpen();
+                }
             }
 
         }; // Drawer Toggle Object Made
@@ -234,11 +346,201 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
             return true;
         }
 
-        if(id == R.id.action_next){
-            Intent intent = new Intent(this, LeTestActivity.class);
-            startActivity(intent);
-        }
-
         return super.onOptionsItemSelected(item);
+    }
+
+
+
+    //================================================================================
+    // Bluetooth Low Energy Code
+    //================================================================================
+
+    private void showNotification(String message) {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.github_circle_24dp)
+                        .setContentTitle("BLEduino Notification")
+                        .setContentText(message);
+//
+//        // Creates an explicit intent for an Activity in your app
+//        Intent resultIntent = new Intent(this, MainActivity.class);
+//
+//        // The stack builder object will contain an artificial back stack for the started Activity.
+//        // This ensures that navigating backward from the Activity leads out of
+//        // your application to the Home screen.
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//
+//        // Adds the back stack for the Intent (but not the Intent itself)
+//        stackBuilder.addParentStack(MainActivity.class);
+//
+//        // Adds the Intent that starts the Activity to the top of the stack
+//        stackBuilder.addNextIntent(resultIntent);
+//        PendingIntent resultPendingIntent =
+//                stackBuilder.getPendingIntent(
+//                        0,
+//                        PendingIntent.FLAG_UPDATE_CURRENT
+//                );
+//
+//        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // mId allows you to update the notification later on.
+        long[] pattern = {500,500,500};
+        mBuilder.setVibrate(pattern);
+        mNotificationManager.notify(1, mBuilder.build());
+
+        try {
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            r.play();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean subscribe(){
+
+        //TODO Subscribe to notification on firmataclick.
+        //----------  Get characteristic to be used in this Activity -------------//
+
+        if(mBluetoothLeService.getBluetoothGatt() != null){
+
+            if(mBluetoothLeService.getConnectionState() == BLEService.STATE_DISCONNECTED){
+                return false;
+            }
+
+            //Get list of services
+            List<BluetoothGattService> mBluetoothGattServices = mBluetoothLeService.getSupportedGattServices(); //mBluetoothGatt.getServices();
+
+            //Look for uart service
+            for (BluetoothGattService leService : mBluetoothGattServices) {
+                //Found service, get write characteristic, put value, then write it.
+                if(leService.getUuid().equals(UUID.fromString(BLEGattAttributes.BLEDUINO_NOTIFICATION_SERVICE))){
+                    mFirmataCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_NOTIFICATION_CHARACTERISTIC));
+
+                    // Subscribe
+                    mBluetoothLeService.setCharacteristicNotification(mFirmataCharacteristic, true);
+                    return true;
+                }}}
+
+        return false;
+    }
+
+    //Allow Fragments to use the BLE service.
+    public BLEService getBluetoothLeService() {
+        return mBluetoothLeService;
+    }
+
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (BLEService.ACTION_GATT_CONNECTED.equals(action)) {
+
+                Toast.makeText(getApplicationContext(), "Discovering Services.", Toast.LENGTH_SHORT).show();
+                // Display "Connected" notification.
+
+            }
+
+            else if (BLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
+
+                //TODO make this into a dialog
+                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+
+                try{
+                    ConnectionManagerFragment currentFragment = (ConnectionManagerFragment)
+                            getSupportFragmentManager().findFragmentById(R.id.frameContainer);
+
+                    currentFragment.setupAdapter();
+
+                } catch (Exception e){
+                    Log.e(TAG, "Device disconnected. Not displaying connection manager, so do nothing.");
+                }
+
+            }
+
+            else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                // All services and characteristics discovered.
+                // Show all the supported services and characteristics on the user interface.
+                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+
+            }
+
+            else if (BLEService.ACTION_DATA_AVAILABLE.equals(action)){
+                Log.d(TAG, "Data Received!");
+                //Log.d(TAG, (intent.getByteArrayExtra("EXTRA_DATA")[0] + ""));
+
+//                try {
+//                    updateList("BLEduino", new String(intent.getByteArrayExtra("EXTRA_DATA"), "UTF-8"));
+//                } catch (UnsupportedEncodingException e) {
+//                    e.printStackTrace();
+//                }
+
+            }
+
+            else if (BLEService.ACTION_GATT_RSSI.equals(action)) {
+               //
+                Toast.makeText(getApplicationContext(), "ACTION_GATT_RSSI", Toast.LENGTH_SHORT).show();
+            }
+
+            else if(BLEService.ACTION_NOTIFICATION_AVAILABLE.equals(action)){
+                try {
+                    String message = new String(intent.getByteArrayExtra("EXTRA_DATA"), "UTF-8");
+                    Log.d(TAG, message );
+                    //TODO Present notification
+                    showNotification(message);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    };
+
+    // No idea, check what an update filter is.
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BLEService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BLEService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BLEService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BLEService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BLEService.ACTION_NOTIFICATION_AVAILABLE);
+        return intentFilter;
+    }
+
+    //================================================================================
+    // Talking to Fragments
+    //================================================================================
+
+    @Override
+    public void connectionManagerEvent() {
+        Log.d(TAG, "Connection Manager Fragment Listener is Working");
+    }
+
+
+    @Override
+    public void modulesFragmentEvent() {
+
+    }
+
+    @Override
+    public void moduleAdapterEvent(View caller, int index) {
+        Log.d(TAG, "NOTIFICATION CLICK");
+
+        if(subscribe()){
+            Toast.makeText(this, "Subscribing to notifications", Toast.LENGTH_SHORT).show();
+
+            ((ImageView) caller.findViewById(R.id.imageView)).setImageResource(R.drawable.ic_notifications_black_48dp);
+        } else {
+            Toast.makeText(this, "Cannot subscribe to notifications", Toast.LENGTH_SHORT).show();
+            ((ImageView) caller.findViewById(R.id.imageView)).setImageResource(R.drawable.ic_notifications_none_black_48dp);
+        }
+    }
+
+    @Override
+    public void settingsFragmentEvent() {
+        Log.d(TAG, "Settings Fragment Listener is Working");
     }
 }

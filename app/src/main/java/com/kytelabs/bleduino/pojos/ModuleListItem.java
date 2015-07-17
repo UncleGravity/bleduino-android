@@ -3,7 +3,7 @@ package com.kytelabs.bleduino.pojos;
 import android.app.Activity;
 
 /**
- * Created by aviera1 on 3/19/15.
+ * Created by Angel Viera on 3/19/15.
  */
 public class ModuleListItem {
     private int mIconId;

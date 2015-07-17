@@ -13,6 +13,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.kytelabs.bleduino.R;
+import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
+import com.kytelabs.bleduino.pojos.LeParsedDevice;
 
 import java.util.List;
 
@@ -24,14 +26,22 @@ public class ConnectionManagerListAdapter extends RecyclerView.Adapter<Connectio
     //Member Variables
     //--------------------------------------------------------------------------------
     private Context mContext;
-    List<String> mLeDevices; //Change to BLEduino object list
+    List<LeParsedDevice> mLeDevices; //Change to BLEduino object list
+    OnDeviceSelectedListener mDeviceCallback; //Tell ConnectionManagerFragment to do it's magic.
 
     //================================================================================
     // Constructor
     //================================================================================
-    public ConnectionManagerListAdapter(Context context, List<String> leDevices) {
+    public ConnectionManagerListAdapter(Context context, ConnectionManagerFragment connectionManagerFragment, List<LeParsedDevice> leDevices) {
         mContext = context;
         mLeDevices = leDevices;
+
+        try {
+            mDeviceCallback = connectionManagerFragment;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(connectionManagerFragment.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
     }
 
     //================================================================================
@@ -45,11 +55,19 @@ public class ConnectionManagerListAdapter extends RecyclerView.Adapter<Connectio
 
     @Override
     public void onBindViewHolder(ConnectionManagerListAdapter.ViewHolder holder, int position) {
-        String deviceName = mLeDevices.get(position);
+
+        String deviceName = mLeDevices.get(position).getName();
+
+        // Handle devices with no device name available.
+        if(deviceName == null || deviceName.equals("")){
+            deviceName = "Unknown";
+        }
         holder.mLeNameTextView.setText(deviceName);
+        holder.mLeParsedDevice = mLeDevices.get(position);
 
         // proof of concept for text styling (section dividers)
-        if(position == 0 || position == 2){
+        // TODO Style based on "Connected" or "Disconnected".
+        if(mLeDevices.get(position).isConnectedLabel() || mLeDevices.get(position).isFoundLabel()){
             holder.mLeNameTextView.setPadding(dpToPx(16), dpToPx(8), 0, 0);
             holder.mLeNameTextView.setTextColor(Color.parseColor("#8a000000"));
             holder.itemView.setOnClickListener(null);
@@ -82,6 +100,7 @@ public class ConnectionManagerListAdapter extends RecyclerView.Adapter<Connectio
     //================================================================================
     public class ViewHolder extends RecyclerView.ViewHolder implements RecyclerView.OnClickListener {
         TextView mLeNameTextView;
+        LeParsedDevice mLeParsedDevice;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -92,12 +111,17 @@ public class ConnectionManagerListAdapter extends RecyclerView.Adapter<Connectio
         @Override
         public void onClick(View v) {
             Log.d("ConnectionAdapter","Click");
-            /*if(device.connected){
-                // connection options.  change name? or nothing for now.
-            } else if(device.notConnected){
-                // Attempt to connect
-                // Callback?
-            }*/
+            Log.d("Device Name: ", mLeParsedDevice.getName());
+            Log.d("Device Address: ", mLeParsedDevice.getAddress());
+
+            if(!mLeParsedDevice.isFoundLabel() && !mLeParsedDevice.isConnectedLabel()) {
+                mDeviceCallback.onDeviceSelected(mLeParsedDevice);
+            }
         }
     }
+
+    public interface OnDeviceSelectedListener {
+        public void onDeviceSelected(LeParsedDevice clickedDevice);
+    }
+
 }

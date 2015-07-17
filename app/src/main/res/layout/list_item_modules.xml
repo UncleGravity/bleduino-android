@@ -6,13 +6,12 @@
               android:paddingLeft="30dp"
               android:paddingTop="50dp"
               android:paddingRight="30dp"
-              android:paddingBottom="10dp">
+              android:paddingBottom="7dp">
 
     <ImageView
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:id="@+id/imageView"
-        android:background="@color/primaryColor_500"
         android:layout_gravity="center_horizontal"/>
 
     <TextView

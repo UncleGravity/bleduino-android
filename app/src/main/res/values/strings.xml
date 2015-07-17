@@ -33,6 +33,7 @@
     <string name="title_activity_le_test">BLE Test</string>
     <string name="title_activity_keyboard_module">Keyboard</string>
     <string name="title_activity_console_module">Console</string>
+    <string name="title_activity_led_module">LED</string>
 
 
 </resources>

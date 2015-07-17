@@ -16,8 +16,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import io.fabric.sdk.android.Fabric;
 
 
 public class LeTestActivity extends ActionBarActivity implements BluetoothAdapter.LeScanCallback{
@@ -39,6 +42,7 @@ public class LeTestActivity extends ActionBarActivity implements BluetoothAdapte
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_le_test);
         ButterKnife.inject(this);
 
@@ -55,7 +59,7 @@ public class LeTestActivity extends ActionBarActivity implements BluetoothAdapte
         BluetoothManager manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = manager.getAdapter();
 
-        mDevices = new SparseArray<BluetoothDevice>();
+        mDevices = new SparseArray<>();
     }
 
     @Override
@@ -82,7 +86,6 @@ public class LeTestActivity extends ActionBarActivity implements BluetoothAdapte
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "No BLE Support.", Toast.LENGTH_SHORT).show();
             finish();
-            return;
         }
     }
 
@@ -132,6 +135,10 @@ public class LeTestActivity extends ActionBarActivity implements BluetoothAdapte
             return true;
         }
 
+        else{
+            Log.d("LeTestActivity", "Clicked on BLE Device " + mDevices.get(0).getName());
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -157,6 +164,7 @@ public class LeTestActivity extends ActionBarActivity implements BluetoothAdapte
 
     private void stopScan() {
         mBluetoothAdapter.stopLeScan(this);
+        //invalidateOptionsMenu();
         //setProgressBarIndeterminateVisibility(false);
     }
 
