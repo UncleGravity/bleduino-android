@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.LedListAdapter;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
@@ -33,6 +34,7 @@ import java.util.UUID;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import io.fabric.sdk.android.Fabric;
 
 public class LedModuleActivity extends ActionBarActivity implements LedListAdapter.OnLedClickListener {
 
@@ -96,6 +98,7 @@ public class LedModuleActivity extends ActionBarActivity implements LedListAdapt
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_led_module);
         ButterKnife.inject(this);
 

@@ -34,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.kytelabs.bleduino.adapters.DrawerListAdapter;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
 import com.kytelabs.bleduino.ble.BLEService;
@@ -49,6 +50,7 @@ import java.util.UUID;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import io.fabric.sdk.android.Fabric;
 
 
 public class MainActivity
@@ -106,7 +108,7 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Fabric.with(this, new Crashlytics());
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
 
         ButterKnife.inject(this); //neverforget.jpg
@@ -358,7 +360,7 @@ public class MainActivity
     private void showNotification(String message) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.github_circle_24dp)
+                        .setSmallIcon(R.mipmap.kytelabs_logo)
                         .setContentTitle("BLEduino Notification")
                         .setContentText(message);
 //

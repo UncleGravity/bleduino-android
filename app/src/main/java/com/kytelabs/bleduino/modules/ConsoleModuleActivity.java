@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.ConsoleListAdapter;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
@@ -36,6 +37,7 @@ import java.util.UUID;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import io.fabric.sdk.android.Fabric;
 
 public class ConsoleModuleActivity extends ActionBarActivity {
 
@@ -102,6 +104,7 @@ public class ConsoleModuleActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_console_module);
         ButterKnife.inject(this);
 
