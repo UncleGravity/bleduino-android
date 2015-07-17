@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,9 +72,10 @@ public class DrawerListAdapter extends BaseAdapter {
                 title.setText(item.getText());
 
                 if (mItems.get(position).isSelected()) {
-                    final int newColor = mContext.getResources().getColor(R.color.accentColor);
+                    final int newColor = mContext.getResources().getColor(R.color.primaryColor_500);
                     icon.setColorFilter(newColor, PorterDuff.Mode.SRC_ATOP);
                     title.setTextColor(newColor);
+                    title.setTypeface(Typeface.DEFAULT_BOLD);
                 } else {
                     icon.setColorFilter(Color.parseColor("#de000000"), PorterDuff.Mode.SRC_ATOP);
 

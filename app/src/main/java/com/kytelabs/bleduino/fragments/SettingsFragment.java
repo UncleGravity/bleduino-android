@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.SettingsListAdapter;
@@ -70,6 +71,7 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemClic
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
+        Toast.makeText(getActivity(),"Settings not functional at the moment.", Toast.LENGTH_LONG).show();
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception

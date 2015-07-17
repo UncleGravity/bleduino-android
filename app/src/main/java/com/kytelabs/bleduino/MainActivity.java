@@ -211,7 +211,7 @@ public class MainActivity
         mNavigationItems[1] = new NavigationItem();
         mNavigationItems[1].setFragmentClass(ModulesFragment.class);
         mNavigationItems[1].setText("Modules");
-        mNavigationItems[1].setIconId(R.drawable.ic_console_black_24dp);
+        mNavigationItems[1].setIconId(R.drawable.ic_apps_black_48dp);
 
         mNavigationItems[2] = new NavigationItem();
         mNavigationItems[2].setFragmentClass(ConnectionManagerFragment.class);
@@ -227,7 +227,7 @@ public class MainActivity
         mNavigationItems[4].setDivider(true);
 
         mNavigationItems[5] = new NavigationItem();
-        mNavigationItems[5].setText("Other Stuff");
+        mNavigationItems[5].setText("");
         mNavigationItems[5].setHeader(true);
 
         // Set selected from parameter
