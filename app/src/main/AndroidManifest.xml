@@ -33,16 +33,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".modules.Module1Activity"
-            android:configChanges="orientation"
-            android:label="@string/title_activity_module1"
-            android:parentActivityName=".MainActivity"
-            android:screenOrientation="portrait" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.kytelabs.bleduino.MainActivity" />
-        </activity>
-        <activity
             android:name=".LeTestActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_le_test"

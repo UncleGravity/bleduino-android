@@ -2,6 +2,8 @@ package com.kytelabs.bleduino.fragments;
 
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SwitchCompat;
@@ -149,5 +151,9 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemClic
         }
 
         //TODO other onclicks
+        if(mSettingsListItems[position].getItemType() == SettingsListItem.TEXT_ICON){
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.github.com/bleduino"));
+            startActivity(browserIntent);
+        }
     }
 }

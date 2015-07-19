@@ -24,7 +24,6 @@ import com.crashlytics.android.Crashlytics;
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
 import com.kytelabs.bleduino.ble.BLEService;
-import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,9 +42,8 @@ public class KeyboardModule extends ActionBarActivity {
     // BLE variables
     //----------------------------------------------------------------------------
 
-    BluetoothGattCharacteristic mBleduinoWriteCharacteristic;
-    BluetoothGattCharacteristic mBleduinoReadCharacteristic;
     BLEService mBluetoothLeService;
+    BluetoothGattCharacteristic mBleduinoWriteCharacteristic;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -72,7 +70,6 @@ public class KeyboardModule extends ActionBarActivity {
                 for (BluetoothGattService leService : mBluetoothGattServices) {
                     //Found service, get write characteristic, put value, then write it.
                     if(leService.getUuid().equals(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_SERVICE))){
-                        mBleduinoReadCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_READ_CHARACTERISTIC));
                         mBleduinoWriteCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_UART_WRITE_CHARACTERISTIC));
             }}}
 
@@ -159,33 +156,24 @@ public class KeyboardModule extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        else if(id == R.id.action_keyboard_send){
+        if (id == R.id.action_keyboard_send) {
             sendLeString(mEditText.getText().toString());
             //Log.i(TAG, "Enter pressed with text: " + mEditText.getText());
             mEditText.setText("");
         }
 
-        else if(id == R.id.action_keyboard_backspace){
-            //sendLeString("\b");
-            mBluetoothLeService.setCharacteristicNotification(mBleduinoReadCharacteristic, true);
+        else if (id == R.id.action_keyboard_backspace) {
+            sendLeString("\b");
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    //================================================================================
+    //==========================================================================
     // Bluetooth Low Energy Code
     //================================================================================
 
     private boolean sendLeString(String text) {
-
-        // TODO handle when there is no device connected.  mBluetoothGatt == null
-        // TODO handle sending data bigger than 20 bytes.
 
         if(text.length() > 20){
             Toast.makeText(getApplicationContext(), "Data must be less than 20 characters.", Toast.LENGTH_SHORT).show();
@@ -197,10 +185,7 @@ public class KeyboardModule extends ActionBarActivity {
             return false;
         }
 
-        if(mBluetoothLeService.getConnectionState() == BLEService.STATE_DISCONNECTED){
-            Toast.makeText(getApplicationContext(), "No BLEduino connected", Toast.LENGTH_SHORT).show();
-            return false;
-        }
+
 
         // Write text to uart characteristic
         mBleduinoWriteCharacteristic.setValue(text.getBytes());
@@ -215,39 +200,18 @@ public class KeyboardModule extends ActionBarActivity {
             final String action = intent.getAction();
 
             if (BLEService.ACTION_GATT_CONNECTED.equals(action)) {
-
                 Toast.makeText(getApplicationContext(), "Discovering Services.", Toast.LENGTH_SHORT).show();
-                // Display "Connected" notification.
-
             }
 
             else if (BLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
-
                 //TODO make this into a dialog
                 Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
-
-                try{
-                    ConnectionManagerFragment currentFragment = (ConnectionManagerFragment)
-                            getSupportFragmentManager().findFragmentById(R.id.frameContainer);
-
-                    currentFragment.setupAdapter();
-
-                } catch (Exception e){
-                    Log.e(TAG, "Device disconnected. Not displaying connection manager, so do nothing.");
-                }
-
-            }
-
-            else if (BLEService.ACTION_DATA_AVAILABLE.equals(action)){
-                Log.d(TAG, "Data Received!");
-                Log.d(TAG, (intent.getByteArrayExtra("EXTRA_DATA")[0] + ""));
             }
 
             else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // All services and characteristics discovered.
                 // Show all the supported services and characteristics on the user interface.
                 Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
-
             }
 
         }

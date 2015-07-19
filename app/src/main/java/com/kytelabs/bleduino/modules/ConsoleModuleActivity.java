@@ -216,12 +216,7 @@ public class ConsoleModuleActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        else if(id == R.id.action_console_send){
+        if(id == R.id.action_console_send){
 
             if(sendLeString(mEditText.getText().toString())){
                 updateList("Android", mEditText.getText().toString());
