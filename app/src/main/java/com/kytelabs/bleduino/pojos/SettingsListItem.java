@@ -11,6 +11,11 @@ public class SettingsListItem {
     public static final int TWO_LINE = 3;
     public static final int TEXT_ICON = 4;
 
+    public static String SETTINGS_FILE = "bleduino_settings";
+    public static String SETTING_FILTER = "Only Scan BLEduinos";
+    public static String SETTING_NOTIFY = "Notify on disconnect";
+    public static String SETTING_REMINDER = "Connection reminder alert";
+
     private int mItemType;
     private String mPrimaryText;
     private String mSecondaryText; //app version (on the bottomm, grayed out)

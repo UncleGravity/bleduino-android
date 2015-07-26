@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
@@ -25,8 +26,8 @@ import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.LedListAdapter;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
 import com.kytelabs.bleduino.ble.BLEService;
-import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
 import com.kytelabs.bleduino.pojos.LedListItem;
+import com.kytelabs.bleduino.pojos.SettingsListItem;
 
 import java.util.Arrays;
 import java.util.List;
@@ -265,35 +266,22 @@ public class LedModuleActivity extends ActionBarActivity implements LedListAdapt
             else if (BLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
 
                 //TODO make this into a dialog
-                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+                //Get bleduino settings
+                SharedPreferences prefs = getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
 
-                try{
-                    ConnectionManagerFragment currentFragment = (ConnectionManagerFragment)
-                            getSupportFragmentManager().findFragmentById(R.id.frameContainer);
-
-                    currentFragment.setupAdapter();
-
-                } catch (Exception e){
-                    Log.e(TAG, "Device disconnected. Not displaying connection manager, so do nothing.");
+                if(prefs.getBoolean(SettingsListItem.SETTING_NOTIFY, true)){
+                    Toast.makeText(getApplicationContext(),"Disconnected!",Toast.LENGTH_SHORT).show();
                 }
 
-            }
-
-            else if (BLEService.ACTION_DATA_AVAILABLE.equals(action)){
-                Log.d(TAG, "Data Received!");
             }
 
             else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // All services and characteristics discovered.
                 // Show all the supported services and characteristics on the user interface.
-                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_LONG).show();
 
             }
 
-            else if (BLEService.ACTION_GATT_RSSI.equals(action)) {
-                //
-                //Toast.makeText(getApplicationContext(), "ACTION_GATT_RSSI", Toast.LENGTH_SHORT).show();
-            }
 
         }
     };

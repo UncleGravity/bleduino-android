@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -42,6 +43,7 @@ import com.kytelabs.bleduino.fragments.ConnectionManagerFragment;
 import com.kytelabs.bleduino.fragments.ModulesFragment;
 import com.kytelabs.bleduino.fragments.SettingsFragment;
 import com.kytelabs.bleduino.pojos.NavigationItem;
+import com.kytelabs.bleduino.pojos.SettingsListItem;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -404,7 +406,6 @@ public class MainActivity
 
     public boolean subscribe(){
 
-        //TODO Subscribe to notification on firmataclick.
         //----------  Get characteristic to be used in this Activity -------------//
 
         if(mBluetoothLeService.getBluetoothGatt() != null){
@@ -422,7 +423,7 @@ public class MainActivity
                 if(leService.getUuid().equals(UUID.fromString(BLEGattAttributes.BLEDUINO_NOTIFICATION_SERVICE))){
                     mFirmataCharacteristic = leService.getCharacteristic(UUID.fromString(BLEGattAttributes.BLEDUINO_NOTIFICATION_CHARACTERISTIC));
 
-                    // Subscribe
+                    // Subscribe ---------------------------------------------------//
                     mBluetoothLeService.setCharacteristicNotification(mFirmataCharacteristic, true);
                     return true;
                 }}}
@@ -450,7 +451,13 @@ public class MainActivity
             else if (BLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
 
                 //TODO make this into a dialog
-                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+
+                //Get bleduino settings
+                SharedPreferences prefs = getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+
+                if(prefs.getBoolean(SettingsListItem.SETTING_NOTIFY, true)){
+                    Toast.makeText(getApplicationContext(),"Disconnected!",Toast.LENGTH_SHORT).show();
+                }
 
                 try{
                     ConnectionManagerFragment currentFragment = (ConnectionManagerFragment)
@@ -467,7 +474,7 @@ public class MainActivity
             else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // All services and characteristics discovered.
                 // Show all the supported services and characteristics on the user interface.
-                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Connected!", Toast.LENGTH_LONG).show();
 
             }
 

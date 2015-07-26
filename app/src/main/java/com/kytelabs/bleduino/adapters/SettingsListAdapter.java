@@ -2,6 +2,7 @@ package com.kytelabs.bleduino.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -76,13 +77,31 @@ public class SettingsListAdapter extends BaseAdapter {
 
                 SwitchCompat toggleSwitch = (SwitchCompat) convertView.findViewById(R.id.settingsToggleSwitch);
                 toggleSwitch.setChecked(item.isToggleState());
+                toggleSwitch.setTag(item.getPrimaryText());
 
                 toggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Log.d("TAG", "Toggle");
+                        Log.d("TAG", buttonView.getTag().toString());
                         // TODO save changed state to user preferences
+
+                        SharedPreferences.Editor editor = mContext.getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0).edit();
+                        String buttonTag = buttonView.getTag().toString();
+
+                        if (buttonTag.equals(SettingsListItem.SETTING_FILTER)){
+                            editor.putBoolean(SettingsListItem.SETTING_FILTER, isChecked);
+                        }
+
+                        else if(buttonTag.equals(SettingsListItem.SETTING_NOTIFY)){
+                            editor.putBoolean(SettingsListItem.SETTING_NOTIFY, isChecked);
+                        }
+
+                        else if(buttonTag.equals(SettingsListItem.SETTING_REMINDER)){
+                            editor.putBoolean(SettingsListItem.SETTING_REMINDER, isChecked);
+                        }
+
+                        editor.apply();
                     }
                 });
 

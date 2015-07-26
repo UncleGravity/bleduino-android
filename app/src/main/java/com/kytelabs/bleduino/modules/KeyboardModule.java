@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
@@ -24,6 +25,7 @@ import com.crashlytics.android.Crashlytics;
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.ble.BLEGattAttributes;
 import com.kytelabs.bleduino.ble.BLEService;
+import com.kytelabs.bleduino.pojos.SettingsListItem;
 
 import java.util.List;
 import java.util.UUID;
@@ -205,7 +207,13 @@ public class KeyboardModule extends ActionBarActivity {
 
             else if (BLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 //TODO make this into a dialog
-                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+
+                //Get bleduino settings
+                SharedPreferences prefs = getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+
+                if(prefs.getBoolean(SettingsListItem.SETTING_NOTIFY, true)){
+                    Toast.makeText(getApplicationContext(),"Disconnected!",Toast.LENGTH_SHORT).show();
+                }
             }
 
             else if (BLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {

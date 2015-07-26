@@ -4,6 +4,7 @@ package com.kytelabs.bleduino.fragments;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -21,6 +22,7 @@ import com.kytelabs.bleduino.adapters.ConnectionManagerListAdapter;
 import com.kytelabs.bleduino.ble.BLEService;
 import com.kytelabs.bleduino.pojos.DividerItemDecoration;
 import com.kytelabs.bleduino.pojos.LeParsedDevice;
+import com.kytelabs.bleduino.pojos.SettingsListItem;
 
 import java.util.ArrayList;
 
@@ -97,10 +99,11 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        //mBluetoothAdapter.stopLeScan(callback);
-                        stopScan();
-                        setupAdapter();
-                        mSwipeRefreshLayout.setRefreshing(false);
+                        if(mSwipeRefreshLayout.isRefreshing()) {
+                            stopScan();
+                            setupAdapter();
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
                     }
                 }, 2500); // <-- Time spent scanning.
             }
@@ -112,6 +115,11 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     @Override
     public void onPause() {
         super.onPause();
+
+        if(mSwipeRefreshLayout.isRefreshing()){
+            mSwipeRefreshLayout.setRefreshing(false);
+            Log.d(TAG, "refreshing stop");
+        }
 
         mBluetoothAdapter.stopLeScan(this);
     }
@@ -131,6 +139,26 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
 
         //Use one of the interface functions whenever you need to talk to MainActivity
         mListener.connectionManagerEvent();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(true);
+            }
+        });
+
+        mSwipeRefreshLayout.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1500);
+
     }
 
     //================================================================================
@@ -154,8 +182,17 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 
-        mDevices.add(device);
-        Log.e("Found Something! ", device.getName());
+        //Get bleduino settings
+        SharedPreferences prefs = getActivity().getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+
+        if(!prefs.getBoolean(SettingsListItem.SETTING_FILTER, false)){
+            mDevices.add(device);
+            Log.e("Found BLEduino! ", device.getName());
+        }
+
+        else {
+            Log.e("Found not BLEduino! ", device.getName());
+        }
         //mBluetoothLeService.connect(device.getAddress());
 
     }

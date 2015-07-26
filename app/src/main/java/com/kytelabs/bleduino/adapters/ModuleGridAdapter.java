@@ -2,6 +2,7 @@ package com.kytelabs.bleduino.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.support.v7.widget.RecyclerView;
@@ -11,10 +12,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.fragments.ModulesFragment;
 import com.kytelabs.bleduino.pojos.ModuleListItem;
+import com.kytelabs.bleduino.pojos.SettingsListItem;
 
 import java.util.List;
 
@@ -22,7 +25,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 /**
- * Created by aviera1 on 3/19/15.
+ * Created by Angel Viera on 3/19/15.
  */
 public class ModuleGridAdapter extends RecyclerView.Adapter<ModuleGridAdapter.ViewHolder> {
 
@@ -51,6 +54,13 @@ public class ModuleGridAdapter extends RecyclerView.Adapter<ModuleGridAdapter.Vi
                 }
 
                 else {
+                    //Get bleduino settings
+                    SharedPreferences prefs = mContext.getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+
+                    if(prefs.getBoolean(SettingsListItem.SETTING_REMINDER, true)){
+                        Toast.makeText(mContext,"No BLEduino connected",Toast.LENGTH_SHORT).show();
+                    }
+
                     Intent intent = new Intent(mContext, mModules.get(index).getNextClass());
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     mContext.startActivity(intent);

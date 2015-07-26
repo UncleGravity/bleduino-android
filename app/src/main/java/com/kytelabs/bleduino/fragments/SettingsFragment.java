@@ -3,6 +3,7 @@ package com.kytelabs.bleduino.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.kytelabs.bleduino.R;
 import com.kytelabs.bleduino.adapters.SettingsListAdapter;
@@ -73,8 +73,6 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemClic
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        Toast.makeText(getActivity(),"Settings not functional at the moment.", Toast.LENGTH_LONG).show();
-
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
@@ -89,6 +87,10 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void populateNavigation() {
+
+        //Get bleduino settings
+        SharedPreferences prefs = getActivity().getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+
         // Fill this baby up
         mSettingsListItems = new SettingsListItem[7];
 
@@ -97,26 +99,26 @@ public class SettingsFragment extends Fragment implements AdapterView.OnItemClic
         mSettingsListItems[0].setItemType(SettingsListItem.HEADER);
 
         mSettingsListItems[1] = new SettingsListItem();
-        mSettingsListItems[1].setPrimaryText("Only Scan BLEduinos");
+        mSettingsListItems[1].setPrimaryText(SettingsListItem.SETTING_FILTER);
         mSettingsListItems[1].setItemType(SettingsListItem.TOGGLE);
         //TODO set default toggle state (from user preferences if available)
-        mSettingsListItems[1].setToggleState(true);
+        mSettingsListItems[1].setToggleState(prefs.getBoolean(SettingsListItem.SETTING_FILTER, false));
 
         mSettingsListItems[2] = new SettingsListItem();
         mSettingsListItems[2].setPrimaryText("Device Connection");
         mSettingsListItems[2].setItemType(SettingsListItem.HEADER);
 
         mSettingsListItems[3] = new SettingsListItem();
-        mSettingsListItems[3].setPrimaryText("Notify on disconnect");
+        mSettingsListItems[3].setPrimaryText(SettingsListItem.SETTING_NOTIFY);
         mSettingsListItems[3].setItemType(SettingsListItem.TOGGLE);
         //TODO set default toggle state (from user preferences if available)
-        mSettingsListItems[3].setToggleState(false);
+        mSettingsListItems[3].setToggleState(prefs.getBoolean(SettingsListItem.SETTING_NOTIFY, true));
 
         mSettingsListItems[4] = new SettingsListItem();
-        mSettingsListItems[4].setPrimaryText("Connection reminder alert");
+        mSettingsListItems[4].setPrimaryText(SettingsListItem.SETTING_REMINDER);
         mSettingsListItems[4].setItemType(SettingsListItem.TOGGLE);
         //TODO set default toggle state (from user preferences if available)
-        mSettingsListItems[4].setToggleState(true);
+        mSettingsListItems[4].setToggleState(prefs.getBoolean(SettingsListItem.SETTING_REMINDER, true));
 
         mSettingsListItems[5] = new SettingsListItem();
         mSettingsListItems[5].setPrimaryText("Other");
