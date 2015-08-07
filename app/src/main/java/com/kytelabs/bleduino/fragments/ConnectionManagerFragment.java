@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.kytelabs.bleduino.MainActivity;
 import com.kytelabs.bleduino.R;
@@ -45,6 +46,9 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     private BLEService mBluetoothLeService;
     private BluetoothAdapter mBluetoothAdapter;
     public static ArrayList<BluetoothDevice> mDevices = new ArrayList<>();
+
+    //Get bleduino settings
+    boolean isFilterActive;
 
     // This is how we talk to MainActivity
     ConnectionManagerListener mListener;
@@ -79,33 +83,15 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
         setupBLE();
         setupAdapter();
 
+        //Get bleduino settings
+        SharedPreferences prefs = getActivity().getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+        isFilterActive = prefs.getBoolean(SettingsListItem.SETTING_FILTER, false);
+
         mSwipeRefreshLayout.setColorSchemeResources(R.color.accentColor);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-
-                Log.e("Conn State ", "" + mBluetoothLeService.getConnectionState());
-                mDevices.clear();
-
-                // Start scanning
-                startScan();
-
-                // Populate device array (This happens in startLeScan callback, implemented here)
-                // filtered by BLEduino or not, depending on settings
-                // Make sure connected devices are between "found" and "connected"
-                // The rest will be after "found"
-
-                // Run the handler below
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(mSwipeRefreshLayout.isRefreshing()) {
-                            stopScan();
-                            setupAdapter();
-                            mSwipeRefreshLayout.setRefreshing(false);
-                        }
-                    }
-                }, 2500); // <-- Time spent scanning.
+                refreshCallback();
             }
         });
 
@@ -136,35 +122,56 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
             throw new ClassCastException(activity.toString()
                     + " must implement ConnectionManagerListener");
         }
-
-        //Use one of the interface functions whenever you need to talk to MainActivity
-        mListener.connectionManagerEvent();
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        mSwipeRefreshLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                mSwipeRefreshLayout.setRefreshing(true);
-            }
-        });
-
-        mSwipeRefreshLayout.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        }, 1500);
-
+        //Use one of the interface functions whenever you need to talk to MainActivity
+        mListener.connectionManagerEvent();
+        manualRefresh();
     }
 
     //================================================================================
     // Le Scanning
     //================================================================================
 
+    private void refreshCallback() {
+        Log.e("Conn State ", "" + mBluetoothLeService.getConnectionState());
+        mDevices.clear();
+
+        // Start scanning
+        startScan();
+
+        // Populate device array (This happens in startLeScan callback, implemented here)
+        // filtered by BLEduino or not, depending on settings
+        // Make sure connected devices are between "found" and "connected"
+        // The rest will be after "found"
+
+        // Run the handler below
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mSwipeRefreshLayout.isRefreshing()) {
+                    stopScan();
+                    setupAdapter();
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        }, 2500); // <-- Time spent scanning.
+    }
+
+    private void manualRefresh() {
+        //Start scanning automagically.
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(true);
+                refreshCallback();
+            }
+        });
+    }
 
     private void startScan() {
         mBluetoothAdapter.startLeScan(this);
@@ -182,18 +189,20 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 
-        //Get bleduino settings
-        SharedPreferences prefs = getActivity().getSharedPreferences(SettingsListItem.SETTINGS_FILE, 0);
+//        if(!isFilterActive && device.getName().equals("BLEduino")){
+//            mDevices.add(device);
+//            Log.e("Found BLEduino! ", device.getName());
+//        }
+//
+//        else {
+//            mDevices.add(device);
+//            Log.e("Found not BLEduino! ", device.getName());
+//        }
 
-        if(!prefs.getBoolean(SettingsListItem.SETTING_FILTER, false)){
-            mDevices.add(device);
-            Log.e("Found BLEduino! ", device.getName());
-        }
-
-        else {
-            Log.e("Found not BLEduino! ", device.getName());
-        }
         //mBluetoothLeService.connect(device.getAddress());
+
+        mDevices.add(device);
+        //Log.e("Found BLEduino! ", device.getName());
 
     }
 
@@ -214,7 +223,7 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     //================================================================================
     public void setupAdapter() {
 
-        //mDevices.clear();
+        String connectedDeviceAddress = null;
 
         //Add Connected and Found labels.
         //Create LeParsedDevice list to simplify display/handling of the ble devices.
@@ -240,7 +249,17 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
 
             //add found devices (ie. not connected) to list
             LeParsedDevice nonConnectedDevice = new LeParsedDevice(device.getName(),device.getAddress(),false);
-            parsedDevices.add(parsedDevices.size(), nonConnectedDevice);
+
+            if(parsedDevices.get(1).isConnected()) {
+                if (!nonConnectedDevice.getAddress().equals(mBluetoothLeService.getBluetoothGatt().getDevice().getAddress())) {
+                    parsedDevices.add(parsedDevices.size(), nonConnectedDevice);
+                }
+            }
+
+            else{
+                parsedDevices.add(parsedDevices.size(), nonConnectedDevice);
+            }
+
         }
 
         // Do divider decoration stuff
@@ -262,29 +281,35 @@ public class ConnectionManagerFragment extends Fragment implements BluetoothAdap
     //On click of a device.
     @Override
     public void onDeviceSelected(final LeParsedDevice clickedDevice) {
-        if(clickedDevice.isConnected()){
-            //don't do anything at the moment
-            Log.d(TAG, "Already connected, stand down.");
+
+        if(mBluetoothLeService.getConnectionState() == BLEService.STATE_CONNECTED){
+            Toast.makeText(getActivity(), "Disconnecting from: " + mBluetoothLeService.getBluetoothGatt().getDevice().getName(), Toast.LENGTH_SHORT).show();
+            mBluetoothLeService.disconnect();
+            manualRefresh();
+            //Toast.makeText(getActivity(),"Disconnect from previous device first", Toast.LENGTH_SHORT).show();
         }
 
-        else{
+        if(!clickedDevice.isConnected()){
+
             mBluetoothLeService.connect(clickedDevice.getAddress());
-            //Toast.makeText(getActivity(), "Connecting", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Connecting", Toast.LENGTH_SHORT).show();
 
             //TODO handle unsuccessful connections
             // start a loading dialog.
             // when connection state comes back, reset list and end loading dialog.
 
-            //for now
-            // Run the handler below
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    BluetoothDevice connectedDevice = mBluetoothLeService.getBluetoothGatt().getDevice();
-                    mDevices.remove(connectedDevice);
-                    setupAdapter();
-                }
-            }, 2000); // <-- Time spent scanning.
+            manualRefresh();
+
+//            //for now
+//            // Run the handler below
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    BluetoothDevice connectedDevice = mBluetoothLeService.getBluetoothGatt().getDevice();
+//                    mDevices.remove(connectedDevice);
+//                    setupAdapter();
+//                }
+//            }, 2000); // <-- Time spent scanning.
         }
 
     }

@@ -17,10 +17,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -123,7 +126,25 @@ public class ConsoleModuleActivity extends ActionBarActivity {
         //Recycler Setup
         //--------------------------------------------------------------------------------
         mMessages = new ArrayList<>();
-        //populateModules(); //TODO only for debugging. Remove this.
+
+        mEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+                if ((actionId & EditorInfo.IME_ACTION_DONE) > 0) {
+
+                    if(sendLeString(mEditText.getText().toString())){
+                        updateList("Android", mEditText.getText().toString());
+                        mEditText.setText("");
+                    }
+
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        });
 
         setupAdapter();
 
